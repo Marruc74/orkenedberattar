@@ -5,6 +5,7 @@ import AudioPlayer from '@/components/AudioPlayer';
 import Icon from '@/components/Icon';
 import ObjectCard from '@/components/ObjectCard';
 import ObjectHero from '@/components/ObjectHero';
+import Quiz from '@/components/Quiz';
 import { MarkSeen } from '@/components/Seen';
 import SiteFooter from '@/components/SiteFooter';
 import { TourJoin, TourNav } from '@/components/Tour';
@@ -13,6 +14,7 @@ import {
   getObject,
   getObjectByNumber,
   getObjects,
+  getQuizObjects,
   getRelated,
   getRoom,
   getToursFor,
@@ -130,6 +132,10 @@ export default async function ObjectPage({ params }: Params) {
               ))}
             </dl>
           </div>
+        )}
+
+        {o.quiz.length > 0 && (
+          <Quiz nummer={o.nummer} titel={o.titel} questions={o.quiz} total={getQuizObjects().length} />
         )}
 
         {related.length > 0 && (

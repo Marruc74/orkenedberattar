@@ -1,6 +1,6 @@
 ---
 slug: stora-salen
 namn: Stora salen
-ordning: 2
+ordning: 1
 ---
-Salen där socknen har dansat, spelat teater och firat i hundra år.
+Tillfällig text.

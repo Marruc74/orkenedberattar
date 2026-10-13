@@ -337,6 +337,19 @@ img {
   height: 100%;
   object-fit: cover;
 }
+/* Real photo: keep its own shape, but cap tall (portrait) photos so the text
+   below stays in reach; the whole item stays visible, centred on a calm band. */
+.hero-photo {
+  max-height: 70svh;
+  width: 100%;
+  background: var(--color-pressed);
+}
+.hero-photo img {
+  /* Pinned to the box: height: 100% does not resolve against a max-height. */
+  position: absolute;
+  inset: 0;
+  object-fit: contain;
+}
 .hero-placeholder {
   display: flex;
   flex-direction: column;
@@ -997,13 +1010,11 @@ img {
 .room-row > .icon {
   color: var(--color-accent);
 }
+/* Wraps rather than scrolls: all rooms stay visible without a hidden scroll. */
 .chips {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 calc(-1 * var(--gutter));
-  padding: 0 var(--gutter);
 }
 .chip {
   flex: none;

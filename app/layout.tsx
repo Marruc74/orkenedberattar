@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Atkinson_Hyperlegible, Fraunces } from 'next/font/google';
 import SiteHeader from '@/components/SiteHeader';
+import { getQuizObjects } from '@/lib/content';
 import './globals.css';
+import './game.css';
 
 // next/font downloads the fonts at build time and serves them from our own domain,
 // so no visitor request goes to Google (spec §7, GDPR).
@@ -33,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="sv" className={`${fraunces.variable} ${atkinson.variable}`}>
       <body>
         <div className="page">
-          <SiteHeader />
+          <SiteHeader stampTotal={getQuizObjects().length} />
           {children}
         </div>
       </body>

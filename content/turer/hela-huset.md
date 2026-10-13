@@ -1,7 +1,7 @@
 ---
 slug: hela-huset
 namn: Hela huset
-langdMin: 20
-objekt: [1, 7, 2, 3, 9, 12]
+langdMin: 15
+objekt: [1, 2, 3, 4, 5, 6, 7, 8]
 ---
-Från entrén upp till vinden. Ta gärna med hörlurar.
+Tillfällig text. Ordningen ändras när föremålens platser är bestämda.

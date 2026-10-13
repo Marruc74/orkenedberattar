@@ -58,3 +58,30 @@ export function useActiveTour(): string | null | undefined {
 
 export const startTour = (slug: string) => write(TOUR_KEY, slug);
 export const endTour = () => write(TOUR_KEY, null);
+
+// Stamps: one per object whose quiz was answered right. Detective: number of clues solved.
+const STAMP_KEY = 'orkened:stamplar';
+const DETECTIVE_KEY = 'orkened:detektiv';
+
+const getStampsRaw = () => read(STAMP_KEY) ?? '';
+const getDetectiveRaw = () => read(DETECTIVE_KEY) ?? '0';
+
+/** `null` during server render and hydration. */
+export function useStamps(): number[] | null {
+  const raw = useSyncExternalStore(subscribe, getStampsRaw, () => null);
+  return raw === null ? null : parseSeen(raw);
+}
+
+export function addStamp(n: number) {
+  const stamps = parseSeen(getStampsRaw());
+  if (!stamps.includes(n)) write(STAMP_KEY, [...stamps, n].join(','));
+}
+
+/** Clues solved so far; `null` during server render and hydration. */
+export function useDetectiveProgress(): number | null {
+  const raw = useSyncExternalStore(subscribe, getDetectiveRaw, () => null);
+  return raw === null ? null : Number(raw) || 0;
+}
+
+export const setDetectiveProgress = (n: number) => write(DETECTIVE_KEY, n > 0 ? String(n) : null);
+export const clearStamps = () => write(STAMP_KEY, null);

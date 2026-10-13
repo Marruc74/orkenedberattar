@@ -3,23 +3,27 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import { formatTime } from './format';
+import { imageSize } from './image-size';
 
 const ROOT = path.join(process.cwd(), 'content');
 
 export type Audio = { fil: string; langdSek: number; berattare: string; transkript: string };
 export type Video = { youtubeId: string; titel: string; langdSek: number; textning: boolean };
 export type Link = { titel: string; url: string };
+/** "plats" needs the visitor to look at the item in the room; "berattelse" is about the story. */
+export type QuizQuestion = { typ: 'plats' | 'berattelse'; fraga: string; alternativ: string[]; svar: string };
 
 export type ObjectItem = {
   nummer: number;
   slug: string;
   titel: string;
   ingress: string;
-  heroBild: { src?: string; alt: string };
+  heroBild: { src?: string; alt: string; width?: number; height?: number };
   ljud?: Audio;
   video?: Video;
   fakta: [string, string][];
   vissteDu?: string;
+  quiz: QuizQuestion[];
   rum: string;
   relaterade: number[];
   lankar: Link[];
@@ -30,6 +34,8 @@ export type ObjectItem = {
 
 export type Room = { slug: string; namn: string; ordning: number; beskrivning: string };
 export type Tour = { slug: string; namn: string; langdMin: number; objekt: number[]; beskrivning: string };
+export type Clue = { ledtrad: string; hjalp?: string; nummer: number };
+export type Detective = { slug: string; namn: string; marke: string; ledtradar: Clue[]; beskrivning: string };
 
 const READ_MORE_AFTER_WORDS = 150;
 
@@ -65,7 +71,9 @@ function renderBody(md: string) {
   };
 }
 
-let cache: { objects: ObjectItem[]; rooms: Room[]; tours: Tour[] } | null = null;
+const withSize = (b: ObjectItem['heroBild']) => (b.src ? { ...b, ...imageSize(b.src) } : b);
+
+let cache: { objects: ObjectItem[]; rooms: Room[]; tours: Tour[]; detective?: Detective } | null = null;
 
 function load() {
   if (cache) return cache;
@@ -79,7 +87,7 @@ function load() {
         slug: d.slug,
         titel: d.titel,
         ingress: d.ingress,
-        heroBild: d.heroBild ?? { alt: d.titel },
+        heroBild: withSize(d.heroBild ?? { alt: d.titel }),
         ljud: d.ljud,
         video: d.video,
         fakta: (d.fakta ?? []).map((row: Record<string, unknown>) => {
@@ -87,6 +95,7 @@ function load() {
           return [k, String(v)] as [string, string];
         }),
         vissteDu: d.vissteDu,
+        quiz: (d.quiz ?? []).map((q: QuizQuestion) => ({ ...q, alternativ: q.alternativ.map(String), svar: String(q.svar) })),
         rum: d.rum,
         relaterade: d.relaterade ?? [],
         lankar: d.lankar ?? [],
@@ -104,13 +113,17 @@ function load() {
     (m): Tour => ({ ...(m.data as Omit<Tour, 'beskrivning'>), beskrivning: m.content.trim() }),
   );
 
-  validate(objects, rooms, tours);
-  cache = { objects, rooms, tours };
+  const [detective] = fs.existsSync(path.join(ROOT, 'uppdrag'))
+    ? readDir('uppdrag').map((m): Detective => ({ ...(m.data as Omit<Detective, 'beskrivning'>), beskrivning: m.content.trim() }))
+    : [];
+
+  validate(objects, rooms, tours, detective);
+  cache = { objects, rooms, tours, detective };
   return cache;
 }
 
 /** Fails the build on broken references so volunteers get an error instead of a broken page. */
-function validate(objects: ObjectItem[], rooms: Room[], tours: Tour[]) {
+function validate(objects: ObjectItem[], rooms: Room[], tours: Tour[], detective?: Detective) {
   const nums = new Set<number>();
   const slugs = new Set<string>();
   const roomSlugs = new Set(rooms.map((r) => r.slug));
@@ -121,6 +134,13 @@ function validate(objects: ObjectItem[], rooms: Room[], tours: Tour[]) {
     if (!roomSlugs.has(o.rum)) throw new Error(`Objekt ${o.nummer}: okänt rum "${o.rum}"`);
     if (!o.heroBild.alt) throw new Error(`Objekt ${o.nummer}: heroBild saknar alt-text`);
     if (o.ljud && !o.ljud.transkript) throw new Error(`Objekt ${o.nummer}: ljud kräver transkript`);
+    for (const q of o.quiz) {
+      if (q.typ !== 'plats' && q.typ !== 'berattelse')
+        throw new Error(`Objekt ${o.nummer}: quiz-typ måste vara "plats" eller "berattelse", inte "${q.typ}"`);
+      if (q.alternativ.length < 2) throw new Error(`Objekt ${o.nummer}: frågan "${q.fraga}" behöver minst två alternativ`);
+      if (!q.alternativ.includes(q.svar))
+        throw new Error(`Objekt ${o.nummer}: svaret "${q.svar}" finns inte bland alternativen till "${q.fraga}"`);
+    }
     nums.add(o.nummer);
     slugs.add(o.slug);
   }
@@ -129,11 +149,16 @@ function validate(objects: ObjectItem[], rooms: Room[], tours: Tour[]) {
       if (!nums.has(r)) throw new Error(`Objekt ${o.nummer}: relaterat objekt ${r} finns inte`);
   for (const t of tours)
     for (const n of t.objekt) if (!nums.has(n)) throw new Error(`Rundtur ${t.slug}: objekt ${n} finns inte`);
+  for (const c of detective?.ledtradar ?? [])
+    if (!nums.has(c.nummer)) throw new Error(`Detektivuppdraget: ledtråden "${c.ledtrad}" pekar på objekt ${c.nummer} som inte finns`);
 }
 
 export const getObjects = () => load().objects;
 export const getRooms = () => load().rooms;
 export const getTours = () => load().tours;
+export const getDetective = () => load().detective;
+/** Items that award a stamp: the stamp card total. */
+export const getQuizObjects = () => getObjects().filter((o) => o.quiz.length > 0);
 
 export const getObject = (slug: string) => getObjects().find((o) => o.slug === slug);
 export const getObjectByNumber = (n: number) => getObjects().find((o) => o.nummer === n);

@@ -1,13 +1,15 @@
 import Link from 'next/link';
+import { DetectiveStartButton } from '@/components/Detective';
 import Icon from '@/components/Icon';
 import NumberLookup from '@/components/NumberLookup';
 import SiteFooter from '@/components/SiteFooter';
 import { TourStartButton } from '@/components/Tour';
-import { getObjects, getRooms, getSummaries, getTours, toTourInfo } from '@/lib/content';
+import { getDetective, getObjects, getRooms, getSummaries, getTours, toTourInfo } from '@/lib/content';
 
 export default function HomePage() {
   const objects = getObjects();
   const tours = getTours();
+  const detective = getDetective();
 
   return (
     <>
@@ -35,6 +37,15 @@ export default function HomePage() {
             </Link>
           </section>
         ))}
+
+        {detective && (
+          <section className="detective-card" aria-labelledby="detektiv-rubrik">
+            <span className="tour-kicker">Uppdrag · {detective.ledtradar.length} ledtrådar · för barn och vuxna</span>
+            <h2 id="detektiv-rubrik">{detective.namn}</h2>
+            <p>{detective.beskrivning}</p>
+            <DetectiveStartButton antal={detective.ledtradar.length} />
+          </section>
+        )}
 
         <section className="stack" style={{ padding: 0, gap: 8 }}>
           <h2 style={{ marginBottom: 4 }}>Rummen</h2>

@@ -51,6 +51,29 @@ Brödtext i Markdown. Efter ca 150 ord visas "Läs mer".
 ```
 
 Rum ligger i `content/rum/`, rundturer i `content/turer/` (ordningen i `objekt:` är rundturens ordning).
+
+## Frågor, stämplar och detektivuppdraget
+
+Frågorna under "Testa dig själv" ligger i föremålets fil. Rätt på alla ger föremålets stämpel:
+
+```yaml
+quiz:
+  - typ: plats            # plats = man måste titta på föremålet, berattelse = om texten
+    fraga: Vad hänger bredvid träskofiolen på väggen?
+    alternativ: [En flöjt, En stråke, En trumma]
+    svar: En stråke       # måste stå exakt som ett av alternativen
+```
+
+Detektivuppdraget ligger i `content/uppdrag/detektiv.md`. Varje ledtråd pekar på ett föremålsnummer, och besökaren svarar med numret på skylten:
+
+```yaml
+ledtradar:
+  - ledtrad: Jag har en stor tratt och spelade musik långt innan det fanns radio.
+    hjalp: Leta i Stora rummet, nära fönstret.   # valfri, visas under "Behöver du hjälp?"
+    nummer: 3
+```
+
+Stämplar och uppdragets läge sparas bara i besökarens webbläsare.
 Bygget stoppar med ett tydligt felmeddelande om t.ex. ett nummer används två gånger eller ett relaterat föremål saknas.
 
 > Exempelinnehållet är fiktivt (från specen). Ljudfiler och YouTube-id saknas än, så ljudspelaren visar felläget och filmen visar "inte uppladdad".
